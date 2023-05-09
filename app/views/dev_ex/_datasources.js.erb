@@ -1,0 +1,118 @@
+function gridDataSource(){
+  const SERVICE_URL = '<%= root_path %>'
+  const dataSource = new DevExpress.data.CustomStore(
+    {
+      key: "id",
+      loadMode:  'processed', //'raw',
+      load: loadStandart(SERVICE_URL, gridResolveBuilder),
+            // Needed to process selected value(s) in the SelectBox, Lookup, Autocomplete, and DropDownBox
+            // byKey: function(key) {
+            //     var d = new $.Deferred();
+            //     $.get('https://mydomain.com/MyDataService?id=' + key)
+            //         .done(function(result) {
+            //             d.resolve(result);
+            //         });
+            //     return d.promise();
+            // }
+      // Если loadMode: 'processed' то нужно реализовать totalCount и byKey
+    }
+  )
+
+  return dataSource
+}
+
+function refDataSource(){
+  const SERVICE_URL = '<%= ref_path %>'
+  const dataSource = new DevExpress.data.CustomStore(
+    {
+      key: "value",
+      loadMode: 'processed', //'raw',
+      load: loadStandart(SERVICE_URL, refResolveBuilder),
+    }
+  )
+
+  return dataSource
+}
+
+function isNotEmpty(value) {
+  return value !== undefined && value !== null && value !== '';
+}
+
+function buildParamsFromLoadOptions(loadOptions) {
+  var params = {};
+
+  [
+      "filter",
+      "group",
+      "groupSummary",
+      "parentIds",
+      "requireGroupCount",
+      "requireTotalCount",
+      "searchExpr",
+      "searchOperation",
+      "searchValue",
+      "select",
+      "sort",
+      "skip",
+      "take",
+      "totalSummary",
+      "userData"
+  ].forEach(function(i) {
+      if(i in loadOptions && isNotEmpty(loadOptions[i])) {
+          params[i] = JSON.stringify(loadOptions[i]);
+      }
+  });
+  return params
+}
+
+function loadStandart(serviceUrl, buildResolve) {
+  return function(loadOptions) {
+        var d = $.Deferred();
+        const params = buildParamsFromLoadOptions(loadOptions)
+        console.log(params)
+        console.log(serviceUrl)
+
+        $.ajax({
+          url: serviceUrl,
+          method: 'get',
+          dataType: 'json',
+          contentType: "application/json; charset=utf-8",
+          data: params,
+          beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+          timeout: 5000,
+          success(response){
+              buildResolve(d, response)
+          },
+          error(result) {
+            console.log('error')
+            d.reject('Ошибка загрузки данных с сервера');
+          },
+        });
+
+        return d.promise();
+    }
+}
+
+function gridResolveBuilder(d, response) {
+  d.resolve(
+            response.data,
+            {
+                totalCount: response.totalCount,
+                summary: response.summary,
+                groupCount: response.groupCount
+            }
+          )
+}
+
+function refResolveBuilder(d, response) {
+  d.resolve(
+            response.data,
+            {
+                totalCount: response.totalCount,
+                summary: response.summary,
+                groupCount: response.groupCount
+            }
+          )
+
+}
+

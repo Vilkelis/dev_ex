@@ -5,3 +5,15 @@
 #
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
+
+refs = DevExRef.create([{name: 'Иванов'},
+                         {name: 'Петров'},
+                         {name: 'Сидоров'},
+                         {name: 'Тамагучи'}]).to_a
+
+100.times do |i|
+  DevExData.create(ref1: refs[rand(refs.length)],
+                   ref2: refs[rand(refs.length)],
+                   description: "Товар #{i}",
+                   start_date: Date.today - rand(100).days)
+end

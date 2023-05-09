@@ -1,1 +1,12 @@
-index.html.erb
+<h1>TEST GRID</h1>
+
+<div class="dx-viewport">
+  <div id='grid'></div>
+</div>
+
+<script type="text/javascript">
+  $(() => {
+      <%= render partial: 'index', formats: [:js] %>
+  })
+</script>
+

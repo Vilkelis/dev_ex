@@ -29,3 +29,9 @@
 
 # Ignore master key for decrypting credentials and more.
 /config/master.key
+
+# Mac OS junk
+.DS_Store
+
+# Ignore command history for byebug
+/.byebug_history

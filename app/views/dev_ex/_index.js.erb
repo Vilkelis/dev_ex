@@ -1,0 +1,62 @@
+
+
+// // Локализация компонентов отчета
+DevExpress.localization.locale('ru');
+
+<%= render partial: 'datasources', formats: [:js] %>
+<%= render partial: 'columns', formats: [:js] %>
+
+
+const grid = $('#grid').dxDataGrid({
+    paging: { enabled: true },
+    dataSource: gridDataSource(),
+    selection: {
+      mode: 'single',
+    },
+    remoteOperations: {
+     paging: true,
+     filtering: true,
+     sorting: true,
+     grouping: true, //!
+     summary: true, //!
+     groupPaging: true, //!
+    },
+    hoverStateEnabled: true,
+    columns: gridColumns(),
+    groupPanel: {visible: true},
+    headerFilter: {allowSearch: true, visible: false},
+    wordWrapEnabled: true,
+    allowColumnReordering: true,
+    allowColumnResizing: true,
+    // columnAutoWidth: true,
+    showBorders: true,
+    width: 'auto',
+    searchPanel: { visible: true},
+    sorting: {
+      mode: 'multiple',
+    },
+    columnChooser: {
+      enabled: false,
+    },
+    columnFixing: {
+      enabled: false,
+    },
+    selection: {
+      mode: 'single',
+    },
+    showBorders: true,
+    scrolling: {
+      mode: 'standard',
+    },
+    headerFilter: {
+      visible: true,
+    },
+    summary: {
+     totalItems: [
+          { name: "customSummary1", summaryType: "custom" },
+          { name: "customSummary2", summaryType: "custom" }
+      ]
+    }
+  }
+).dxDataGrid('instance')
+

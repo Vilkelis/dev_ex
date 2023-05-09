@@ -10,7 +10,16 @@
 // Read Sprockets README (https://github.com/rails/sprockets#sprockets-directives) for details
 // about supported directives.
 //
+
+//= require js/jquery
+//= require js/exceljs
+//= require js/FileSaver
+//= require js/dx.all
+//= require js/localization/dx.messages.ru
+
 //= require rails-ujs
 //= require activestorage
 //= require turbolinks
 //= require_tree .
+
+
