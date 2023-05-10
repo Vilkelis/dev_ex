@@ -3,4 +3,8 @@ Rails.application.routes.draw do
   root to: 'dev_ex#index'
 
   get 'ref', to: 'dev_ex#ref'
+
+  get 'description', to: 'dev_ex#description'
+
+  get 'start_date', to: 'dev_ex#start_date'
 end

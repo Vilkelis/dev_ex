@@ -34,6 +34,32 @@ function refDataSource(){
   return dataSource
 }
 
+function descriptionDataSource(){
+  const SERVICE_URL = '<%= description_path %>'
+  const dataSource = new DevExpress.data.CustomStore(
+    {
+      key: "value",
+      loadMode: 'processed', //'raw',
+      load: loadStandart(SERVICE_URL, refResolveBuilder),
+    }
+  )
+
+  return dataSource
+}
+
+function startDateDataSource(){
+  const SERVICE_URL = '<%= start_date_path %>'
+  const dataSource = new DevExpress.data.CustomStore(
+    {
+      key: "value",
+      loadMode: 'processed', //'raw',
+      load: loadStandart(SERVICE_URL, refResolveBuilder),
+    }
+  )
+
+  return dataSource
+}
+
 function isNotEmpty(value) {
   return value !== undefined && value !== null && value !== '';
 }
@@ -69,6 +95,7 @@ function loadStandart(serviceUrl, buildResolve) {
   return function(loadOptions) {
         var d = $.Deferred();
         const params = buildParamsFromLoadOptions(loadOptions)
+        console.log('PARAMS')
         console.log(params)
         console.log(serviceUrl)
 
@@ -81,6 +108,8 @@ function loadStandart(serviceUrl, buildResolve) {
           beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
           timeout: 5000,
           success(response){
+              console.log('RESPONSE')
+              console.log(response)
               buildResolve(d, response)
           },
           error(result) {

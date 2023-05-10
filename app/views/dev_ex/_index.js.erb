@@ -53,8 +53,8 @@ const grid = $('#grid').dxDataGrid({
     },
     summary: {
      totalItems: [
-          { name: "customSummary1", summaryType: "custom" },
-          { name: "customSummary2", summaryType: "custom" }
+          { name: "ref1_id", column: "ref1_id", summaryType: "sum",  showInColumn: "ref1_id", },
+          { name: "ref1_id", column: "ref1_id", summaryType: "avg", showInColumn: "start_date", },
       ]
     }
   }

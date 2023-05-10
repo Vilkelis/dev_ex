@@ -9,15 +9,26 @@ class DevExController < ApplicationController
     respond_to do |format|
       format.json do
         list_params = all_params_parse(params)
-
         scope = DevExData
-        scope = search_scope(scope, list_params)
-        scope = filter_scope(scope, list_params)
-        total_count = calc_total_count(scope, list_params)
-        scope = sort_scope(scope, list_params)
-        scope = paginate_scope(scope, list_params)
-
-        render json: { data: scope.all, 'totalCount' => total_count }
+        if list_params.dig(:group)
+          scope = search_scope(scope, list_params)
+          scope = filter_scope(scope, list_params)
+          res = group_data(scope, list_params)
+          total_count = res.count
+          data = { data: res }
+          data['groupCount'] = total_count if list_params.dig(:totals, :group_count)
+          render json: data
+        else
+          scope = search_scope(scope, list_params)
+          scope = filter_scope(scope, list_params)
+          total_count = calc_total_count(scope, list_params) if list_params.dig(:totals, :total_count)
+          scope = sort_scope(scope, list_params)
+          scope = paginate_scope(scope, list_params)
+          res = scope.all
+          data = {data: res}
+          data['totalCount'] = total_count if list_params.dig(:totals, :total_count)
+          render json: data
+        end
       end
       format.html do
       end
@@ -28,9 +39,27 @@ class DevExController < ApplicationController
     @report_data = DevExRef # search_params_parse(DevExRef)
     total_count =  0 # @report_data.count()
     @report_data = @report_data.order('name asc')
-                     # .offset(params[:skip])
-                     # .limit(params[:take])
+                      .offset(params[:skip])
+                      .limit(params[:take])
     render json: {data: serialize_ref(@report_data), totalCount: total_count }
+  end
+
+  def description
+    @report_data = DevExData
+    total_count =  0 # @report_data.count()
+    @report_data = @report_data.select(:description).distinct.order('description asc')
+                      .offset(params[:skip])
+                      .limit(params[:take])
+    render json: {data: serialize_description(@report_data), totalCount: total_count }
+  end
+
+  def start_date
+    @report_data = DevExData
+    total_count =  0 # @report_data.count()
+    @report_data = @report_data.select(:start_date).distinct.order('start_date asc')
+                      .offset(params[:skip])
+                      .limit(params[:take])
+    render json: {data: serialize_start_date(@report_data), totalCount: total_count }
   end
 
   private
@@ -62,4 +91,11 @@ class DevExController < ApplicationController
     data.map{|item| {text: item.name, value: item.id}}
   end
 
+  def serialize_description(data)
+    data.map{|item| {text: item.description, value: item.description}}
+  end
+
+  def serialize_start_date(data)
+    data.map{|item| {text: item.start_date, value: item.start_date}}
+  end
 end

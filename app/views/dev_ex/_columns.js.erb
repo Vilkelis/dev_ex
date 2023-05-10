@@ -1,35 +1,44 @@
 function gridColumns(){
  return [{dataField: 'description',
           allowGrouping: true,
-          allowSorting: true},
+          allowSorting: true,
+           headerFilter: {
+            dataSource: descriptionDataSource(),
+            allowSearch: true
+           }
+        },
          {dataField:'ref1_id',
            allowGrouping: true,
            allowSorting: true,
            headerFilter: {
-            // dataSource: refDataSource(),
+            dataSource: refDataSource(),
             allowSearch: true
            }
          },
-         {dataField:'ref2_id',
-          allowGrouping: true,
-          allowSorting: true,
-          headerFilter: {
-            allowSearch: true
-          },
-          lookup: {
-              dataSource: refDataSource(),
-              displayExpr: 'text',
-              valueExpr: 'value'
-          },
-          calculateSortValue: function (data) {
-              const value = this.calculateCellValue(data);
-              return this.lookup.calculateCellValue(value);
-          }
-         },
+         // {dataField:'ref2_id',
+         //  allowGrouping: true,
+         //  allowSorting: true,
+         //  headerFilter: {
+         //    allowSearch: true
+         //  },
+         //  lookup: {
+         //      dataSource: refDataSource(),
+         //      displayExpr: 'text',
+         //      valueExpr: 'value'
+         //  },
+         //  calculateSortValue: function (data) {
+         //      const value = this.calculateCellValue(data);
+         //      return this.lookup.calculateCellValue(value);
+         //  }
+         // },
          {dataField:'start_date',
           allowGrouping: true,
           allowSorting: true,
           allowSearch: false,
+           headerFilter: {
+            dataSource: startDateDataSource(),
+            allowSearch: true
+           }
          },
         ]
 }

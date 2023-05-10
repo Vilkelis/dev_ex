@@ -10,10 +10,17 @@ module DevExParseParams
     res.merge! pagination_params_parse(params)
     res.merge! total_params_parse(params)
     res.merge! sort_params_parse(params)
+    res.merge! group_params_parse(params)
     res
   end
 
   private
+
+  def group_params_parse(params = params)
+    # {"group"=>"[{\"selector\":\"ref1_id\",\"desc\":false,\"isExpanded\":false}]"
+    group = params['group'] ? JSON.parse(params['group']) : nil
+    {group: group}
+  end
 
   def search_params_parse(params = params)
     search_expr = params['searchExpr'] ? JSON.parse(params['searchExpr']) : nil
@@ -40,10 +47,18 @@ module DevExParseParams
   end
 
   def total_params_parse(params = params)
-    return {totals: { total_count: (params['requireTotalCount'] == 'true'),
-                      group_count: (params['requireGroupCount'] == 'true')
+    res = {totals: { total_count: (params['requireTotalCount'] == 'true'),
+                      group_count: (params['requireGroupCount'] == 'true'),
                     }
             }
+    if params["totalSummary"]
+      res[:totals][:total_summary] = JSON.parse(params["totalSummary"].to_s).map{|item| {field: item['selector'], operator: item['summaryType']}}
+    end
+  end
+
+  # totalSummary "[{"selector":"ref1_id","summaryType":"sum"},{"selector":"ref1_id","summaryType":"avg"}]"
+  def total_summary_params_parse(params = params)
+
   end
 
   def sort_params_parse(params = params)
