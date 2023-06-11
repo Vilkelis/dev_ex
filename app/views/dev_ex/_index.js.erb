@@ -25,6 +25,8 @@ const grid = $('#grid').dxDataGrid({
     columns: gridColumns(),
     groupPanel: {visible: true},
     headerFilter: {allowSearch: true, visible: false},
+    filterPanel: {visible: true},
+    filterRow: {visible: true},
     wordWrapEnabled: true,
     allowColumnReordering: true,
     allowColumnResizing: true,
@@ -53,9 +55,13 @@ const grid = $('#grid').dxDataGrid({
     },
     summary: {
      totalItems: [
-          { name: "ref1_id", column: "ref1_id", summaryType: "sum",  showInColumn: "ref1_id", },
-          { name: "ref1_id", column: "ref1_id", summaryType: "avg", showInColumn: "start_date", },
-      ]
+          { name: "ref1_id_val", column: "ref1_id", summaryType: "sum",  showInColumn: "ref1_id", },
+          { name: "ref1_id_val_avg", column: "ref1_id", summaryType: "avg", showInColumn: "start_date", },
+      ],
+     groupItems: [
+          { name: "ref1_id_val", column: "ref1_id", summaryType: "sum",  showInColumn: "ref1_id", },
+          { name: "ref1_id_val_avg", column: "ref1_id", summaryType: "avg", showInColumn: "start_date", },
+      ],
     }
   }
 ).dxDataGrid('instance')

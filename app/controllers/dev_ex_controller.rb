@@ -13,19 +13,25 @@ class DevExController < ApplicationController
         if list_params.dig(:group)
           scope = search_scope(scope, list_params)
           scope = filter_scope(scope, list_params)
+          total_summary = total_summary_data(scope, list_params) if list_params.dig(:totals, :total_summary)
+          total_count = calc_totals(scope, list_params) if list_params.dig(:totals, :total_count)
           res = group_data(scope, list_params)
           total_count = res.count
           data = { data: res }
           data['groupCount'] = total_count if list_params.dig(:totals, :group_count)
+          data['summary'] = total_summary if list_params.dig(:totals, :total_summary)
+          data['totalCount'] = total_count if list_params.dig(:totals, :total_count)
           render json: data
         else
           scope = search_scope(scope, list_params)
           scope = filter_scope(scope, list_params)
-          total_count = calc_total_count(scope, list_params) if list_params.dig(:totals, :total_count)
+          total_summary = total_summary_data(scope, list_params) if list_params.dig(:totals, :total_summary)
+          total_count = calc_totals(scope, list_params) if list_params.dig(:totals, :total_count)
           scope = sort_scope(scope, list_params)
           scope = paginate_scope(scope, list_params)
           res = scope.all
           data = {data: res}
+          data['summary'] = total_summary if list_params.dig(:totals, :total_summary)
           data['totalCount'] = total_count if list_params.dig(:totals, :total_count)
           render json: data
         end

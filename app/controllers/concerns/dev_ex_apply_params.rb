@@ -5,7 +5,7 @@ module DevExApplyParams
   SEARCH_OPERATORS = ['=' , '<>' , '>' , '>=' , '<' , '<="' , 'startswith' , 'endswith' , 'contains' , 'notcontains']
   SEARCH_OPERATORS_TO_SQL = ['= :text' , '<> :text' , '> :text' , '>= :text' , '< :text' , '<= :text' , "ILIKE :text" , "ILIKE :text" , "ILIKE :text" , "NOT ILIKE :text"]
   SEARCH_OPERATORS_TO_SQL_VALUES = [nil , nil , nil , nil , nil , nil , ":text%" , "%:text" , "%:text%" , "%:text%"]
-  SUMMARY_OPERATORS = ["sum", "min", "max", "avg", "count"]
+  SUMMARY_OPERATORS_TO_SQL = {"sum" => 'SUM', 'min' => 'MIN', 'max' => 'MAX', 'avg' => 'AVG', 'count' => 'COUNT'}
 
   def group_data(scope, params)
     return scope unless params.dig(:group)
@@ -19,17 +19,78 @@ module DevExApplyParams
       items_order_expression = sort_expression(params.dig(:sort))
       scope = scope.order(items_order_expression) if items_order_expression
       data = scope.all
-      res = DevExGroupping.build_data(data, group_fields, only_groups: false)
+
+      summary_fields = summary_select_fields(params, summary: :group_summary)
+      res = DevExGroupping.build_data(data, group_fields, only_groups: false,
+                                      summary_fields: summary_fields)
     else
       select_fields = group_fields.dup
+      select_summary_fields = summary_select_fields_for_scope(params, summary: :group_summary)
       select_fields.push('COUNT(*) AS count_rows')
+      select_fields = select_fields + select_summary_fields
+
       data = scope.select(select_fields).group(group_fields).order(group_order_expression)
 
-      res = DevExGroupping.build_data(data, group_fields, only_groups: true)
+      summary_fields = summary_select_fields(params, summary: :group_summary)
+      res = DevExGroupping.build_data(data, group_fields, only_groups: true,
+                                      summary_fields: summary_fields)
     end
     res
   end
 
+  # Возвращает scope с перечнем полей для вычисления агрегирующих функций
+  def summary_scope(scope, params, summary: :total_summary)
+    fields = summary_select_fields_for_scope(params, summary: summary)
+
+    return scope unless fields.any?
+
+    scope.select(fields)
+  end
+
+  # Возвращает массив полей для выполнения SELECT вычисления агрегатов
+  def summary_select_fields_for_scope(params, summary: :total_summary)
+    return [] unless params.dig(:totals, summary)
+
+    select_fields = summary_select_fields(params, summary: summary)
+    return [] unless select_fields.any?
+
+    select_fields.map{|item| "#{item[:formula]} AS #{item[:field]}"}
+  end
+
+  def summary_select_fields(params, summary: :total_summary)
+    select_fields = []
+    params.dig(:totals, summary).each do |item|
+      if SUMMARY_OPERATORS_TO_SQL.keys.include?(item[:operator])
+        field, formula = sql_summary_field(item[:field], item[:operator])
+        select_fields.push({field: field, formula: formula})
+      end
+    end
+    select_fields
+  end
+
+  # Возвращает результат агрерирующих функций в виде hash
+  # нужно передать подготовленный фунцией summary_scope scope
+  def summary_data(scope, params)
+    return nil unless params.dig(:totals, :total_summary)
+
+    select_fields = summary_select_fields(params)
+    data = scope.all.to_a[0]
+    select_fields.map{|item| data[item[:field]]}
+  end
+
+  # Возвращает данные в виде массива агрегирующих функций
+  def total_summary_data(scope, params)
+    scope = summary_scope(scope, params)
+    summary_data(scope, params) if scope
+  end
+
+  def sql_summary_field(field, operator)
+    return ["#{field_to_sql_as(field +'.count')}","#{SUMMARY_OPERATORS_TO_SQL[operator]}(#{field})"]
+  end
+
+  def field_to_sql_as(field)
+    field.gsub('.','_')
+  end
 
   # {:search=>nil, :filter=>nil, :pagination=>{:skip=>0, :take=>20},
   #  :totals=>{:total_count=>true, :group_count=>false}, :sort=>nil}
@@ -188,14 +249,14 @@ module DevExApplyParams
   module DevExGroupping
     extend self
 
-    # Строит из проских данных data данные для структуры с группировкой DevExtreme
+    # Строит из плоских данных data данные для структуры с группировкой DevExtreme
     # group_fields - перечень полей группировки
     # набор данных должен содержать служебное поле count_rows
     # only_groups = true - набор данных представляет собой только группы (без строк)
     # only_groups = false - набор данных содержить отсортированные данные без группировки.
     # нужно произвести группировку и в последнем уровне привести сами данные
-    def build_data(data, group_fields, only_groups: false)
-      return build_groupped_data(data, group_fields) if only_groups
+    def build_data(data, group_fields, only_groups: false, summary_fields: [])
+      return build_groupped_data(data, group_fields, summary_fields: summary_fields) if only_groups
 
       res = []
       keys = Array.new(group_fields.count)
@@ -231,7 +292,7 @@ module DevExApplyParams
       res
     end
 
-    def build_groupped_data(data, group_fields)
+    def build_groupped_data(data, group_fields, summary_fields: summary_fields)
       res = []
       keys = Array.new(group_fields.count)
       cur_group_items = []
@@ -257,12 +318,12 @@ module DevExApplyParams
 
     # Обрабатывает группы одной записи.Возвращает первый item и кол-во вложенных.
     # так же возвращает все созданные items в массив group_items
-    def build_item_tree(group_items, group_field_values, count_value)
+    def build_item_tree(group_items, group_field_values, count_value, summary_values = [])
       return [nil, count_value] unless group_field_values.any?
 
       subitem = {key: group_field_values.shift}
       group_items.push(subitem)
-      subitem[:items], subitem[:count] = build_item_tree(group_items, group_field_values, count_value)
+      subitem[:items], subitem[:count] = build_item_tree(group_items, group_field_values, count_value, summary_values)
 
       return [[subitem], 1]
     end

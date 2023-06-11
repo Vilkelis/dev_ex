@@ -46,19 +46,21 @@ module DevExParseParams
     {pagination: {skip: skip, take: take}}
   end
 
+  # totalSummary "[{"selector":"ref1_id","summaryType":"sum"},{"selector":"ref1_id","summaryType":"avg"}]"
   def total_params_parse(params = params)
     res = {totals: { total_count: (params['requireTotalCount'] == 'true'),
                       group_count: (params['requireGroupCount'] == 'true'),
                     }
             }
     if params["totalSummary"]
-      res[:totals][:total_summary] = JSON.parse(params["totalSummary"].to_s).map{|item| {field: item['selector'], operator: item['summaryType']}}
+      res[:totals][:total_summary] = JSON.parse(params["totalSummary"].to_s)
+                              .map{|item| {field: item['selector'], operator: item['summaryType']}}
     end
-  end
-
-  # totalSummary "[{"selector":"ref1_id","summaryType":"sum"},{"selector":"ref1_id","summaryType":"avg"}]"
-  def total_summary_params_parse(params = params)
-
+    if params["groupSummary"]
+      res[:totals][:group_summary] = JSON.parse(params["groupSummary"].to_s)
+                              .map{|item| {field: item['selector'], operator: item['summaryType']}}
+    end
+    res
   end
 
   def sort_params_parse(params = params)
