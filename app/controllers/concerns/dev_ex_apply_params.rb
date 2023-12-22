@@ -11,19 +11,23 @@ module DevExApplyParams
     return scope unless params.dig(:group)
 
     group_fields = params.dig(:group).map{|item| item['selector']}
+    # Получаем выражение сортировки для набора данных с учетом группировки
     group_order_expression = sort_expression(params.dig(:group))
 
     res = []
     if params.dig(:group).last['isExpanded']
+      # Все группы открыты - нижний уровень = данные
       scope = scope.order(order_fields)
       items_order_expression = sort_expression(params.dig(:sort))
       scope = scope.order(items_order_expression) if items_order_expression
       data = scope.all
 
       summary_fields = summary_select_fields(params, summary: :group_summary)
-      res = DevExGroupping.build_data(data, group_fields, only_groups: false,
+      res = DevExGroupping.build_data(data, group_fields,
+                                      only_groups: false,
                                       summary_fields: summary_fields)
     else
+      # Все группы закрыты - нужно привести данные только по группам
       select_fields = group_fields.dup
       select_summary_fields = summary_select_fields_for_scope(params, summary: :group_summary)
       select_fields.push('COUNT(*) AS count_rows')
@@ -32,7 +36,8 @@ module DevExApplyParams
       data = scope.select(select_fields).group(group_fields).order(group_order_expression)
 
       summary_fields = summary_select_fields(params, summary: :group_summary)
-      res = DevExGroupping.build_data(data, group_fields, only_groups: true,
+      res = DevExGroupping.build_data(data, group_fields,
+                                      only_groups: true,
                                       summary_fields: summary_fields)
     end
     res
@@ -253,7 +258,7 @@ module DevExApplyParams
     # group_fields - перечень полей группировки
     # набор данных должен содержать служебное поле count_rows
     # only_groups = true - набор данных представляет собой только группы (без строк)
-    # only_groups = false - набор данных содержить отсортированные данные без группировки.
+    # only_groups = false - набор данных содержит отсортированные данные без группировки.
     # нужно произвести группировку и в последнем уровне привести сами данные
     def build_data(data, group_fields, only_groups: false, summary_fields: [])
       return build_groupped_data(data, group_fields, summary_fields: summary_fields) if only_groups

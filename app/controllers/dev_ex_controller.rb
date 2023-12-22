@@ -11,25 +11,34 @@ class DevExController < ApplicationController
         list_params = all_params_parse(params)
         scope = DevExData
         if list_params.dig(:group)
+          # Фильтрация данных
           scope = search_scope(scope, list_params)
           scope = filter_scope(scope, list_params)
+          # Подсчет итогов
           total_summary = total_summary_data(scope, list_params) if list_params.dig(:totals, :total_summary)
           total_count = calc_totals(scope, list_params) if list_params.dig(:totals, :total_count)
+          # Данные с группировкой
           res = group_data(scope, list_params)
-          total_count = res.count
+          top_group_count = res.count
+          # Форматирование результата
           data = { data: res }
-          data['groupCount'] = total_count if list_params.dig(:totals, :group_count)
+          data['groupCount'] = top_group_count if list_params.dig(:totals, :group_count)
           data['summary'] = total_summary if list_params.dig(:totals, :total_summary)
           data['totalCount'] = total_count if list_params.dig(:totals, :total_count)
           render json: data
         else
+          # Фильтрация данных
           scope = search_scope(scope, list_params)
           scope = filter_scope(scope, list_params)
+           # Подсчет итогов
           total_summary = total_summary_data(scope, list_params) if list_params.dig(:totals, :total_summary)
           total_count = calc_totals(scope, list_params) if list_params.dig(:totals, :total_count)
+          # Сортировка и пагинаци
           scope = sort_scope(scope, list_params)
           scope = paginate_scope(scope, list_params)
+          # Данные
           res = scope.all
+          # Форматирование результата
           data = {data: res}
           data['summary'] = total_summary if list_params.dig(:totals, :total_summary)
           data['totalCount'] = total_count if list_params.dig(:totals, :total_count)

@@ -49,7 +49,7 @@ module DevExParseParams
   # totalSummary "[{"selector":"ref1_id","summaryType":"sum"},{"selector":"ref1_id","summaryType":"avg"}]"
   def total_params_parse(params = params)
     res = {totals: { total_count: (params['requireTotalCount'] == 'true'),
-                      group_count: (params['requireGroupCount'] == 'true'),
+                     group_count: (params['requireGroupCount'] == 'true'),
                     }
             }
     if params["totalSummary"]
